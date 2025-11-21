@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎸 Anna's Birthday Escape Adventure 🎂</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #4a0e0e 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #game-screen {
+            flex: 1;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease;
+            cursor: crosshair;
+        }
+
+        .room-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .room-overlay.active {
+            display: flex;
+        }
+
+        #ui-bar {
+            height: 80px;
+            background: linear-gradient(180deg, #000 0%, #222 100%);
+            border-top: 3px solid #ff0000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 -5px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        #room-title {
+            font-size: 24px;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            letter-spacing: 2px;
+        }
+
+        #progress {
+            display: flex;
+            gap: 10px;
+        }
+
+        .progress-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #666;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.completed {
+            background: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .clickable {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .clickable:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 15px #ffff00);
+        }
+
+        .puzzle-box {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 3px solid #ff0000;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .puzzle-title {
+            font-size: 28px;
+            color: #ff0000;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .puzzle-content {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #ff3333 0%, #ff0000 100%);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            transform: translateY(-2px);
+        }
+
+        input[type="text"], input[type="number"] {
+            background: #000;
+            border: 2px solid #ff0000;
+            color: #fff;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .story-text {
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #intro-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000 0%, #1a0000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .intro-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 40px;
+        }
+
+        .intro-content h1 {
+            font-size: 48px;
+            color: #ff0000;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff0000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { text-shadow: 0 0 20px #ff0000; }
+            50% { text-shadow: 0 0 40px #ff0000, 0 0 60px #ff0000; }
+        }
+
+        .intro-content p {
+            font-size: 20px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        #victory-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000 0%, #1a0000 100%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            animation: fadeIn 1s ease;
+        }
+
+        #victory-screen.active {
+            display: flex;
+        }
+
+        .victory-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 40px;
+        }
+
+        .victory-content h1 {
+            font-size: 56px;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px #ffd700;
+            animation: pulse 1.5s infinite;
+        }
+
+        .emoji-big {
+            font-size: 80px;
+            margin: 20px 0;
+        }
+
+        .wrong-answer {
+            color: #ff6666;
+            font-style: italic;
+            margin: 10px 0;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .hint-box {
+            background: rgba(255, 255, 0, 0.1);
+            border: 2px solid #ffff00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .interactive-object {
+            padding: 20px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .interactive-object:hover {
+            background: rgba(255, 0, 0, 0.4);
+            transform: scale(1.05);
+        }
+
+        .fitness-challenge {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .fitness-challenge button {
+            font-size: 24px;
+            padding: 20px 40px;
+        }
+
+        .celebration {
+            animation: celebrate 0.5s ease;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .typewriter {
+            overflow: hidden;
+            white-space: pre-wrap;
+            animation: typing 2s steps(40, end);
+        }
+
+        @keyframes typing {
+            from { max-height: 0; opacity: 0; }
+            to { max-height: 1000px; opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeInSlow 1s ease-in;
+        }
+
+        @keyframes fadeInSlow {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .character-dialogue {
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 5px solid #ff0000;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-style: italic;
+        }
+
+        .character-name {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .story-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .room-intro {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #ff0000;
+        }
+
+        .continue-btn {
+            animation: pulse-button 2s infinite;
+        }
+
+        @keyframes pulse-button {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Intro Screen -->
+        <div id="intro-screen">
+            <div class="intro-content" id="intro-content">
+                <!-- Story will be loaded here dynamically -->
+            </div>
+        </div>
+
+        <!-- Main Game Screen -->
+        <div id="game-screen"></div>
+
+        <!-- Room Overlay for Puzzles -->
+        <div id="room-overlay" class="room-overlay"></div>
+
+        <!-- UI Bar -->
+        <div id="ui-bar">
+            <div id="room-title">LOADING...</div>
+            <div id="progress">
+                <div class="progress-dot" id="dot1"></div>
+                <div class="progress-dot" id="dot2"></div>
+                <div class="progress-dot" id="dot3"></div>
+                <div class="progress-dot" id="dot4"></div>
+                <div class="progress-dot" id="dot5"></div>
+            </div>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="victory-screen">
+            <!-- Victory content will be loaded dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentRoom: 0,
+            roomsCompleted: 0,
+            storyPhase: 0,
+            rooms: [
+                { name: 'The Recording Studio', completed: false },
+                { name: 'The King\'s Court', completed: false },
+                { name: 'The Engineering Lab', completed: false },
+                { name: 'The Bike Garage', completed: false },
+                { name: 'The Workshop', completed: false }
+            ]
+        };
+
+        // Story sequences for intro
+        const introStory = [
+            {
+                content: `
+                    <h1 class="fade-in">🎸 ANNA'S BIRTHDAY ESCAPE 🎂</h1>
+                    <div class="emoji-big fade-in">⚡🏍️👑</div>
+                    <div class="story-section fade-in">
+                        <p style="font-size: 24px; color: #ffd700;">Happy Birthday, Anna! 🎉</p>
+                        <p style="font-size: 18px; margin-top: 20px;">Today is YOUR day. A day to celebrate the amazing, hyperactive, creative force of nature that you are!</p>
+                        <p style="font-size: 18px; margin-top: 15px;">But something strange is about to happen...</p>
+                    </div>
+                    <button class="continue-btn" onclick="nextStoryPhase()" style="font-size: 20px; padding: 15px 40px; margin-top: 30px;">CONTINUE ➡️</button>
+                `
+            },
+            {
+                content: `
+                    <h2 style="color: #ff0000; font-size: 36px;">⏰ 7:00 AM - Your Birthday Morning ⏰</h2>
+                    <div class="story-section">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            You wake up in your workshop, surrounded by your latest DIY furniture project. 
+                            The sun is shining through the window, and you can hear AC/DC's "Thunderstruck" 
+                            playing from somewhere...
+                        </p>
+                        <p style="font-size: 18px; margin-top: 15px;">
+                            You stretch, ready for your morning bike ride and workout. But something feels... off.
+                        </p>
+                        <p style="font-size: 20px; margin-top: 20px; color: #ffff00;">
+                            Where's your birthday cake? 🎂
+                        </p>
+                        <p style="font-size: 18px; margin-top: 15px;">
+                            You could have SWORN you left it on the workbench last night...
+                        </p>
+                    </div>
+                    <button class="continue-btn" onclick="nextStoryPhase()" style="font-size: 20px; padding: 15px 40px; margin-top: 20px;">INVESTIGATE 🔍</button>
+                `
+            },
+            {
+                content: `
+                    <h2 style="color: #ff0000; font-size: 36px;">🎸 A Strange Discovery 🎸</h2>
+                    <div class="story-section">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            As you search your workshop, you find a mysterious vinyl record on your workbench. 
+                            It's an AC/DC album... but wait, there's something written on it!
+                        </p>
+                        <div class="character-dialogue">
+                            <div class="character-name">📝 Note on the Record:</div>
+                            <p style="font-size: 18px;">
+                                "Dear Anna,<br><br>
+                                Sorry darlin', but I couldn't resist. Your cake looked too delicious! 
+                                I've hidden it somewhere in your dream workshop complex. 
+                                If you want it back, you'll have to catch me!<br><br>
+                                - E.P. 👑<br>
+                                P.S. - You'll need to prove yourself worthy to my friends first!"
+                            </p>
+                        </div>
+                        <p style="font-size: 20px; margin-top: 20px; color: #ff0000;">
+                            ELVIS PRESLEY STOLE YOUR BIRTHDAY CAKE! 😱
+                        </p>
+                    </div>
+                    <button class="continue-btn" onclick="nextStoryPhase()" style="font-size: 20px; padding: 15px 40px; margin-top: 20px;">THIS IS CRAZY! ➡️</button>
+                `
+            },
+            {
+                content: `
+                    <h2 style="color: #ff0000; font-size: 36px;">⚡ An Unexpected Ally ⚡</h2>
+                    <div class="story-section">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            Suddenly, your workshop speakers crackle to life! A familiar guitar riff fills the air...
+                        </p>
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young (AC/DC):</div>
+                            <p style="font-size: 18px;">
+                                "G'day, Anna! Heard about your cake situation. That Elvis is a cheeky one! 
+                                But don't worry, mate - I know exactly where he's hidden it."
+                            </p>
+                        </div>
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Here's the deal: Elvis set up 5 challenge rooms in your workshop complex. 
+                                Each one tests a different part of who YOU are - your rock knowledge, your engineering 
+                                brilliance, your fitness, your racing skills, and your DIY genius."
+                            </p>
+                        </div>
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Complete all 5 challenges, and I'll tell you where your cake is. 
+                                But you've got to EARN it! Are you ready for... THE THUNDERSTRUCK CHALLENGE?!"
+                            </p>
+                        </div>
+                    </div>
+                    <button class="continue-btn" onclick="nextStoryPhase()" style="font-size: 20px; padding: 15px 40px; margin-top: 20px;">I'M READY! ⚡</button>
+                `
+            },
+            {
+                content: `
+                    <h2 style="color: #ffff00; font-size: 42px; text-shadow: 0 0 30px #ffff00;">⚡ THE THUNDERSTRUCK CHALLENGE ⚡</h2>
+                    <div class="story-section">
+                        <p style="font-size: 20px; line-height: 1.8; color: #ffd700;">
+                            Your mission, should you choose to accept it:
+                        </p>
+                        <div style="text-align: left; margin: 30px auto; max-width: 500px; font-size: 18px; line-height: 2;">
+                            <p>🎸 <strong>Room 1:</strong> The Recording Studio - Prove your AC/DC knowledge</p>
+                            <p>👑 <strong>Room 2:</strong> The King's Court - Face Elvis's trivia</p>
+                            <p>⚡ <strong>Room 3:</strong> The Engineering Lab - Show your technical genius</p>
+                            <p>🏍️ <strong>Room 4:</strong> The Bike Garage - Demonstrate your racing prowess</p>
+                            <p>🔧 <strong>Room 5:</strong> The Workshop - Solve the ultimate DIY puzzle</p>
+                        </div>
+                        <p style="font-size: 20px; margin-top: 30px; color: #ff0000;">
+                            Your hyperactive energy will power you through! ⚡
+                        </p>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            Time to get your cake back and show Elvis who's boss!
+                        </p>
+                    </div>
+                    <button onclick="startGame()" style="font-size: 28px; padding: 20px 50px; margin-top: 30px; animation: pulse-button 1.5s infinite;">
+                        LET'S ROCK! 🎸🔥
+                    </button>
+                `
+            }
+        ];
+
+        // Room intro stories
+        const roomIntros = [
+            // Room 1: Recording Studio
+            {
+                title: "🎸 ROOM 1: THE RECORDING STUDIO 🎸",
+                story: `
+                    <div class="room-intro">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            You push open a heavy door marked with the AC/DC lightning bolt. Inside, you find yourself 
+                            in a legendary recording studio - Marshall amps line the walls, guitars hang everywhere, 
+                            and gold records gleam in the dim light.
+                        </p>
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Welcome to where the magic happens, Anna! Before you can chase Elvis, you need to prove 
+                                you're a TRUE rock fan. I've scrambled some of our greatest song titles. 
+                                Get them right, and the next door opens!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px; color: #ffd700;">
+                            The recording equipment hums to life... Your first challenge awaits! ⚡
+                        </p>
+                    </div>
+                `
+            },
+            // Room 2: King's Court
+            {
+                title: "👑 ROOM 2: THE KING'S COURT 👑",
+                story: `
+                    <div class="room-intro">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            The next door leads you into a lavish palace room. Gold curtains, velvet furniture, 
+                            and there he is - Elvis Presley himself, sitting on a throne, YOUR CAKE beside him!
+                        </p>
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">👑 Elvis Presley:</div>
+                            <p style="font-size: 18px;">
+                                "Well, well, well... Look who found me! You want your cake back, honey? 
+                                You're gonna have to earn it. Answer my questions about The King - that's ME, baby! 
+                                Get them right, and I'll let you continue. Get them wrong... well, thank you, thank you very much, 
+                                but no cake for you!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            Elvis does his signature hip swivel. He's not making this easy!
+                        </p>
+                        <p style="font-size: 18px; margin-top: 15px; color: #ffd700;">
+                            Time to show him you know your rock 'n' roll history! 🎤
+                        </p>
+                    </div>
+                `
+            },
+            // Room 3: Engineering Lab
+            {
+                title: "⚡ ROOM 3: THE ENGINEERING LAB ⚡",
+                story: `
+                    <div class="room-intro">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            You enter a high-tech laboratory filled with circuit boards, oscilloscopes, and electrical equipment. 
+                            This is YOUR territory! The lights flicker - the power is unstable.
+                        </p>
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Elvis sabotaged the power grid to the next room! But you're an electro engineering expert, 
+                                right? Time to put that degree to work! Fix the circuit, solve the problems, and restore power. 
+                                Show me what you learned in university!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px; color: #ffd700;">
+                            Your engineering knowledge will light the way forward! ⚡
+                        </p>
+                    </div>
+                `
+            },
+            // Room 4: Bike Garage
+            {
+                title: "🏍️ ROOM 4: THE BIKE GARAGE 🏍️",
+                story: `
+                    <div class="room-intro">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            The door opens to reveal your DREAM - a massive garage filled with racing bikes! 
+                            Your ultimate racing bike sits in the center, but it's locked with a high-tech security system.
+                        </p>
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">👑 Elvis (via speaker):</div>
+                            <p style="font-size: 18px;">
+                                "Ha! You thought it would be easy? This bike is locked tighter than my Vegas vault! 
+                                Solve my cycling challenges and show me that fitness energy you're famous for. 
+                                Let's see if you're as fast with your brain as you are on a bike!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px; color: #ffd700;">
+                            Time to combine your racing knowledge with your hyperactive energy! 🏍️💪
+                        </p>
+                    </div>
+                `
+            },
+            // Room 5: Workshop
+            {
+                title: "🔧 ROOM 5: THE ULTIMATE WORKSHOP 🔧",
+                story: `
+                    <div class="room-intro">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            You've made it to the final room - and it's beautiful! This is YOUR perfect workshop, 
+                            filled with every tool imaginable. In the center is a magnificent custom-built furniture piece... 
+                            and you can smell your birthday cake inside it!
+                        </p>
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "This is it, Anna! Your final challenge! Elvis hid your cake inside this custom furniture. 
+                                But to open it, you need to solve the blueprint puzzle. Use your DIY genius - 
+                                all those hours building furniture have prepared you for this moment!"
+                            </p>
+                        </div>
+                        <div class="character-dialogue" style="margin-top: 15px;">
+                            <div class="character-name">👑 Elvis (laughing):</div>
+                            <p style="font-size: 18px;">
+                                "One last challenge, birthday girl! Solve it, and the cake is yours! 
+                                Fail, and... well, I've got a sweet tooth! Haha!"
+                            </p>
+                        </div>
+                        <p style="font-size: 20px; margin-top: 20px; color: #ffd700;">
+                            Your creativity and problem-solving skills will unlock your prize! 🔧✨
+                        </p>
+                    </div>
+                `
+            }
+        ];
+
+        // Initialize game with story
+        window.onload = function() {
+            showIntroStory();
+        };
+
+        function showIntroStory() {
+            const introContent = document.getElementById('intro-content');
+            introContent.innerHTML = introStory[gameState.storyPhase].content;
+        }
+
+        function nextStoryPhase() {
+            gameState.storyPhase++;
+            if (gameState.storyPhase < introStory.length) {
+                showIntroStory();
+            }
+        }
+
+        function startGame() {
+            document.getElementById('intro-screen').style.display = 'none';
+            showRoomIntro(0);
+        }
+
+        function showRoomIntro(roomIndex) {
+            const intro = roomIntros[roomIndex];
+            showPuzzle(`
+                <div class="puzzle-box" style="max-width: 700px;">
+                    <div class="puzzle-title">${intro.title}</div>
+                    ${intro.story}
+                    <button onclick="loadRoomPuzzle(${roomIndex})" class="continue-btn" style="font-size: 20px; padding: 15px 40px; margin-top: 30px;">
+                        START CHALLENGE! 🔥
+                    </button>
+                </div>
+            `);
+        }
+
+        function loadRoomPuzzle(roomIndex) {
+            loadRoom(roomIndex);
+        }
+
+        // Room Backgrounds (using CSS gradients for visual appeal)
+        const roomBackgrounds = [
+            'linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%)', // Recording Studio
+            'linear-gradient(135deg, #1a1a00 0%, #333300 50%, #1a1a00 100%)', // Elvis Court
+            'linear-gradient(135deg, #001a1a 0%, #003333 50%, #001a1a 100%)', // Engineering Lab
+            'linear-gradient(135deg, #0a0a0a 0%, #202020 50%, #0a0a0a 100%)', // Bike Garage
+            'linear-gradient(135deg, #1a0a00 0%, #332200 50%, #1a0a00 100%)'  // Workshop
+        ];
+
+        function startGame() {
+            document.getElementById('intro-screen').style.display = 'none';
+            loadRoom(0);
+        }
+
+        function loadRoom(roomIndex) {
+            gameState.currentRoom = roomIndex;
+            const room = gameState.rooms[roomIndex];
+            
+            document.getElementById('room-title').textContent = room.name.toUpperCase();
+            document.getElementById('game-screen').style.background = roomBackgrounds[roomIndex];
+            
+            // Clear previous content
+            document.getElementById('room-overlay').innerHTML = '';
+            document.getElementById('room-overlay').classList.remove('active');
+            
+            // Load room-specific content
+            switch(roomIndex) {
+                case 0: loadRecordingStudio(); break;
+                case 1: loadKingsCourt(); break;
+                case 2: loadEngineeringLab(); break;
+                case 3: loadBikeGarage(); break;
+                case 4: loadWorkshop(); break;
+            }
+        }
+
+        function showPuzzle(content) {
+            const overlay = document.getElementById('room-overlay');
+            overlay.innerHTML = content;
+            overlay.classList.add('active');
+        }
+
+        function completeRoom() {
+            const currentRoomIndex = gameState.currentRoom;
+            gameState.rooms[currentRoomIndex].completed = true;
+            gameState.roomsCompleted++;
+            
+            // Update progress
+            document.getElementById(`dot${currentRoomIndex + 1}`).classList.add('completed');
+            
+            // Check if game is complete
+            if (gameState.roomsCompleted === 5) {
+                showVictory();
+            } else {
+                showTransition();
+            }
+        }
+
+        function showTransition() {
+            const messages = [
+                {
+                    title: "🎸 CHALLENGE COMPLETE! 🎸",
+                    story: `
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Bloody brilliant! You know your AC/DC! I knew you were a true fan. 
+                                But the next challenge won't be so easy... Elvis is waiting for you in his palace. 
+                                Good luck, mate!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            The door to the King's Court glows with golden light...
+                        </p>
+                    `
+                },
+                {
+                    title: "👑 THE KING IS IMPRESSED! 👑",
+                    story: `
+                        <div class="character-dialogue">
+                            <div class="character-name">👑 Elvis Presley:</div>
+                            <p style="font-size: 18px;">
+                                "Well, well... You really do know The King! I'm impressed, honey. 
+                                But don't get cocky - your cake is still mine! The next room needs your BRAIN power. 
+                                Let's see if those engineering skills are as good as you think!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            Elvis waves you toward the Engineering Lab with a sly grin...
+                        </p>
+                    `
+                },
+                {
+                    title: "⚡ POWER RESTORED! ⚡",
+                    story: `
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "Outstanding! You fixed that circuit like a true engineer! The power is flowing again. 
+                                Now, let's see if you can handle the speed challenge. Your racing bike awaits - 
+                                time to show us what that hyperactive energy can do!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            The lights blaze on, revealing the path to the Bike Garage...
+                        </p>
+                    `
+                },
+                {
+                    title: "🏍️ BIKE UNLOCKED! 🏍️",
+                    story: `
+                        <div class="character-dialogue">
+                            <div class="character-name">👑 Elvis (via speaker):</div>
+                            <p style="font-size: 18px;">
+                                "Alright, alright! You're fast, you're fit, and you know your bikes. 
+                                I'll admit, I'm impressed! But there's one final challenge between you and your cake. 
+                                The Workshop holds the ultimate test - let's see if you can out-build The King!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px;">
+                            You hop off the bike and race toward the final room...
+                        </p>
+                    `
+                },
+                {
+                    title: "🎂 ONE FINAL CHALLENGE! 🎂",
+                    story: `
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "This is it, Anna! You've crushed every challenge so far. 
+                                Show Elvis what you're made of! Solve this final puzzle and that cake is yours!"
+                            </p>
+                        </div>
+                        <p style="font-size: 18px; margin-top: 20px; color: #ffd700;">
+                            You can practically taste the victory (and the cake)! 🎂
+                        </p>
+                    `
+                }
+            ];
+            
+            const message = messages[gameState.currentRoom];
+            
+            showPuzzle(`
+                <div class="puzzle-box" style="max-width: 700px;">
+                    <div class="puzzle-title celebration">${message.title}</div>
+                    <div class="story-section">
+                        ${message.story}
+                    </div>
+                    <button onclick="showRoomIntro(${gameState.currentRoom + 1})" class="continue-btn" style="font-size: 20px; padding: 15px 40px; margin-top: 30px;">
+                        NEXT CHALLENGE! ➡️
+                    </button>
+                </div>
+            `);
+        }
+
+        function showVictory() {
+            document.getElementById('victory-screen').innerHTML = `
+                <div class="victory-content">
+                    <h1>🎂 YOU FOUND YOUR CAKE! 🎂</h1>
+                    <div class="emoji-big">🎉🎸⚡🏍️👑🔧</div>
+                    
+                    <div class="story-section" style="text-align: left; max-width: 700px; margin: 30px auto;">
+                        <p style="font-size: 18px; line-height: 1.8;">
+                            The custom furniture clicks open, revealing your beautiful birthday cake inside! 
+                            The room fills with music as AC/DC's "For Those About to Rock" starts playing.
+                        </p>
+                        
+                        <div class="character-dialogue" style="margin-top: 20px;">
+                            <div class="character-name">👑 Elvis Presley:</div>
+                            <p style="font-size: 18px;">
+                                "Well, I'll be! You actually did it, Anna! You beat all my challenges. 
+                                I gotta admit, you're one impressive lady - smart, fit, creative, and you know 
+                                your rock 'n' roll! I'm sorry I took your cake, honey. You've EARNED it back! 
+                                Happy Birthday from The King! 👑"
+                            </p>
+                        </div>
+                        
+                        <div class="character-dialogue">
+                            <div class="character-name">🎸 Angus Young:</div>
+                            <p style="font-size: 18px;">
+                                "THUNDERSTRUCK! That's what you are, Anna! You smashed every challenge like a true rock star! 
+                                Your engineering brilliance, your fitness energy, your DIY genius - you showed it all! 
+                                AC/DC salutes you! 🎸⚡"
+                            </p>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #000; padding: 30px; border-radius: 15px; margin: 30px 0; text-align: center;">
+                            <h2 style="color: #000; font-size: 32px; margin-bottom: 20px;">🎉 HAPPY BIRTHDAY ANNA! 🎉</h2>
+                            <p style="font-size: 20px; line-height: 1.8; color: #000;">
+                                You conquered THE THUNDERSTRUCK CHALLENGE!<br>
+                                You proved you're a rock 'n' roll expert! 🎸<br>
+                                You showed your engineering genius! ⚡<br>
+                                You demonstrated your racing prowess! 🏍️<br>
+                                You displayed your DIY mastery! 🔧<br>
+                                And you brought the hyperactive energy! 💪
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 22px; text-align: center; color: #ffd700; margin-top: 30px;">
+                            May your birthday be as ELECTRIFYING as you are! ⚡
+                        </p>
+                        
+                        <p style="font-size: 18px; text-align: center; margin-top: 20px;">
+                            Keep rocking, racing, building, and being your amazing, creative, hyperactive self! 🚀
+                        </p>
+                        
+                        <p style="font-size: 20px; text-align: center; margin-top: 30px; color: #ff0000;">
+                            Now enjoy that cake - you've EARNED it! 🎂✨
+                        </p>
+                    </div>
+                    
+                    <div class="emoji-big" style="margin-top: 30px;">🎊🎁🎉</div>
+                </div>
+            `;
+            document.getElementById('victory-screen').classList.add('active');
+        }
+
+        // ROOM 1: Recording Studio
+        function loadRecordingStudio() {
+            showPuzzle(`
+                <div class="puzzle-box">
+                    <div class="puzzle-title">🎸 THE RECORDING STUDIO 🎸</div>
+                    <div class="story-text">
+                        Welcome to AC/DC's secret studio! Angus Young has left you a message encoded in song titles.
+                        <br><br>
+                        "Anna, to find your cake, you must prove you're a TRUE fan. Unscramble these AC/DC classics!"
+                    </div>
+                    <div class="puzzle-content">
+                        <div class="interactive-object" onclick="checkRecordingPuzzle()">
+                            <strong>🎵 Unscramble these songs:</strong><br><br>
+                            1. KCURDTSRENHUT = <input type="text" id="song1" placeholder="Type here..." style="width: 200px;">
+                            <br><br>
+                            2. KCAB NI KCALB = <input type="text" id="song2" placeholder="Type here..." style="width: 200px;">
+                            <br><br>
+                            3. YAWGHIH OT LLEH = <input type="text" id="song3" placeholder="Type here..." style="width: 200px;">
+                        </div>
+                        <div id="recording-feedback"></div>
+                        <div class="hint-box">💡 Hint: These are some of the most famous AC/DC songs ever!</div>
+                    </div>
+                    <button onclick="checkRecordingPuzzle()">SUBMIT ANSWERS 🎸</button>
+                </div>
+            `);
+        }
+
+        function checkRecordingPuzzle() {
+            const answer1 = document.getElementById('song1').value.toUpperCase().replace(/\s+/g, '');
+            const answer2 = document.getElementById('song2').value.toUpperCase().replace(/\s+/g, '');
+            const answer3 = document.getElementById('song3').value.toUpperCase().replace(/\s+/g, '');
+            
+            const feedback = document.getElementById('recording-feedback');
+            
+            if (answer1 === 'THUNDERSTRUCK' && answer2 === 'BACKINBLACK' && answer3 === 'HIGHWAYTOHELL') {
+                feedback.innerHTML = '<div style="color: #00ff00; font-size: 20px; margin: 20px 0;">🎸 CORRECT! Angus is shredding in approval! 🎸</div>';
+                setTimeout(() => completeRoom(), 1500);
+            } else {
+                feedback.innerHTML = '<div class="wrong-answer">❌ Not quite! Even Bon Scott is shaking his head... Try again!</div>';
+            }
+        }
+
+        // ROOM 2: King's Court
+        function loadKingsCourt() {
+            showPuzzle(`
+                <div class="puzzle-box">
+                    <div class="puzzle-title">👑 THE KING'S COURT 👑</div>
+                    <div class="story-text">
+                        You've entered Elvis's palace! He's sitting on his throne with YOUR CAKE!
+                        <br><br>
+                        Elvis: "Well, well, well... You want your cake back? Answer my questions, honey!"
+                    </div>
+                    <div class="puzzle-content">
+                        <div class="interactive-object">
+                            <strong>👑 Elvis Trivia Challenge:</strong><br><br>
+                            <strong>1. What year was Elvis born?</strong><br>
+                            <input type="number" id="elvis1" placeholder="Enter year..." style="width: 150px;"><br><br>
+                            
+                            <strong>2. Complete the song: "You ain't nothin' but a ___"</strong><br>
+                            <select id="elvis2" style="background: #000; color: #fff; padding: 10px; border: 2px solid #ff0000; font-size: 16px;">
+                                <option value="">Choose...</option>
+                                <option value="hound">Hound Dog</option>
+                                <option value="heartbreaker">Heartbreaker</option>
+                                <option value="friend">Friend of Mine</option>
+                            </select><br><br>
+                            
+                            <strong>3. Elvis's famous home is called:</strong><br>
+                            <input type="text" id="elvis3" placeholder="Type the name..." style="width: 200px;">
+                        </div>
+                        <div id="elvis-feedback"></div>
+                        <div class="hint-box">💡 Hint: The King was born in 1935, and his home rhymes with "basement"!</div>
+                    </div>
+                    <button onclick="checkElvisPuzzle()">SUBMIT TO THE KING 👑</button>
+                </div>
+            `);
+        }
+
+        function checkElvisPuzzle() {
+            const answer1 = document.getElementById('elvis1').value;
+            const answer2 = document.getElementById('elvis2').value;
+            const answer3 = document.getElementById('elvis3').value.toUpperCase();
+            
+            const feedback = document.getElementById('elvis-feedback');
+            
+            if (answer1 === '1935' && answer2 === 'hound' && answer3 === 'GRACELAND') {
+                feedback.innerHTML = '<div style="color: #00ff00; font-size: 20px; margin: 20px 0;">👑 "Thank you, thank you very much!" Elvis is impressed! 👑</div>';
+                setTimeout(() => completeRoom(), 1500);
+            } else {
+                feedback.innerHTML = '<div class="wrong-answer">❌ "Uh-uh-uh... That ain\'t right, honey!" Try again!</div>';
+            }
+        }
+
+        // ROOM 3: Engineering Lab
+        function loadEngineeringLab() {
+            showPuzzle(`
+                <div class="puzzle-box">
+                    <div class="puzzle-title">⚡ THE ENGINEERING LAB ⚡</div>
+                    <div class="story-text">
+                        Time to put your electro engineering skills to the test!
+                        <br><br>
+                        The power circuit to the next room is broken. Fix it with your knowledge!
+                    </div>
+                    <div class="puzzle-content">
+                        <div class="interactive-object">
+                            <strong>⚡ Circuit Challenge:</strong><br><br>
+                            
+                            <strong>1. Ohm's Law: V = I × R<br>
+                            If V = 12V and R = 4Ω, what is I (current in Amperes)?</strong><br>
+                            <input type="number" id="eng1" placeholder="Enter number..." style="width: 150px;"> A<br><br>
+                            
+                            <strong>2. A resistor has color bands: Brown, Black, Red, Gold<br>
+                            What is its resistance?</strong><br>
+                            <select id="eng2" style="background: #000; color: #fff; padding: 10px; border: 2px solid #ff0000; font-size: 16px;">
+                                <option value="">Choose...</option>
+                                <option value="100">100 Ω</option>
+                                <option value="1000">1000 Ω (1kΩ)</option>
+                                <option value="10000">10000 Ω (10kΩ)</option>
+                            </select><br><br>
+                            
+                            <strong>3. In AC circuits, what does "AC" stand for?</strong><br>
+                            <input type="text" id="eng3" placeholder="Type answer..." style="width: 250px;">
+                        </div>
+                        <div id="eng-feedback"></div>
+                        <div class="hint-box">💡 Hint: I = V/R, and yes, AC in circuits has the same name as your favorite band! 🎸</div>
+                    </div>
+                    <button onclick="checkEngineeringPuzzle()">ACTIVATE CIRCUIT ⚡</button>
+                </div>
+            `);
+        }
+
+        function checkEngineeringPuzzle() {
+            const answer1 = document.getElementById('eng1').value;
+            const answer2 = document.getElementById('eng2').value;
+            const answer3 = document.getElementById('eng3').value.toUpperCase().replace(/\s+/g, '');
+            
+            const feedback = document.getElementById('eng-feedback');
+            
+            if (answer1 === '3' && answer2 === '1000' && (answer3 === 'ALTERNATINGCURRENT' || answer3 === 'ACDC')) {
+                feedback.innerHTML = '<div style="color: #00ff00; font-size: 20px; margin: 20px 0;">⚡ CIRCUIT COMPLETE! Power restored! (Nice AC/DC reference! 😄) ⚡</div>';
+                setTimeout(() => completeRoom(), 2000);
+            } else {
+                feedback.innerHTML = '<div class="wrong-answer">❌ Short circuit! Check your calculations! Try again!</div>';
+            }
+        }
+
+        // ROOM 4: Bike Garage
+        function loadBikeGarage() {
+            showPuzzle(`
+                <div class="puzzle-box">
+                    <div class="puzzle-title">🏍️ THE BIKE GARAGE 🏍️</div>
+                    <div class="story-text">
+                        Your dream racing bike is here, but it's locked!
+                        <br><br>
+                        Solve these cycling challenges to unlock it and race to the final room!
+                    </div>
+                    <div class="puzzle-content">
+                        <div class="interactive-object">
+                            <strong>🏍️ Cycling & Fitness Challenge:</strong><br><br>
+                            
+                            <strong>1. If you cycle at 30 km/h for 45 minutes, how many km do you travel?</strong><br>
+                            <input type="number" id="bike1" placeholder="Enter distance..." style="width: 150px;"> km<br><br>
+                            
+                            <strong>2. Your bike has a gear ratio of 50/11. Is this a:</strong><br>
+                            <select id="bike2" style="background: #000; color: #fff; padding: 10px; border: 2px solid #ff0000; font-size: 16px;">
+                                <option value="">Choose...</option>
+                                <option value="high">High gear (for speed)</option>
+                                <option value="low">Low gear (for climbing)</option>
+                            </select><br><br>
+                            
+                            <strong>3. FITNESS POWER-UP! 💪<br>
+                            To unlock the bike, show your hyperactive energy!</strong><br>
+                            <div class="fitness-challenge">
+                                <p style="font-size: 20px; margin: 15px 0;">Are you ready to do 5 jumping jacks right now?</p>
+                                <button id="fitness-btn" onclick="fitnessChallenge()">YES! LET'S GO! 💪</button>
+                                <div id="fitness-counter" style="font-size: 48px; color: #ffff00; margin: 20px 0;"></div>
+                            </div>
+                        </div>
+                        <div id="bike-feedback"></div>
+                        <div class="hint-box">💡 Hint: Distance = Speed × Time (convert minutes to hours!)</div>
+                    </div>
+                    <button id="bike-submit" onclick="checkBikePuzzle()" style="display:none;">UNLOCK BIKE 🏍️</button>
+                </div>
+            `);
+        }
+
+        let fitnessCompleted = false;
+        let jumpCount = 0;
+
+        function fitnessChallenge() {
+            const btn = document.getElementById('fitness-btn');
+            const counter = document.getElementById('fitness-counter');
+            
+            if (jumpCount < 5) {
+                jumpCount++;
+                counter.textContent = `${jumpCount} / 5 💪`;
+                counter.classList.add('celebration');
+                setTimeout(() => counter.classList.remove('celebration'), 500);
+                
+                if (jumpCount === 5) {
+                    btn.textContent = '✅ ENERGY CHARGED!';
+                    btn.style.background = 'linear-gradient(135deg, #00ff00 0%, #00cc00 100%)';
+                    fitnessCompleted = true;
+                    document.getElementById('bike-submit').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function checkBikePuzzle() {
+            const answer1 = document.getElementById('bike1').value;
+            const answer2 = document.getElementById('bike2').value;
+            
+            const feedback = document.getElementById('bike-feedback');
+            
+            if (answer1 === '22.5' && answer2 === 'high' && fitnessCompleted) {
+                feedback.innerHTML = '<div style="color: #00ff00; font-size: 20px; margin: 20px 0;">🏍️ BIKE UNLOCKED! You\'re riding like a champion! 🏍️</div>';
+                setTimeout(() => completeRoom(), 1500);
+            } else if (!fitnessCompleted) {
+                feedback.innerHTML = '<div class="wrong-answer">❌ Complete the fitness challenge first! Show that hyperactive energy! 💪</div>';
+            } else {
+                feedback.innerHTML = '<div class="wrong-answer">❌ Not quite! Check your speed calculations! Try again!</div>';
+            }
+        }
+
+        // ROOM 5: Workshop
+        function loadWorkshop() {
+            showPuzzle(`
+                <div class="puzzle-box">
+                    <div class="puzzle-title">🔧 THE ULTIMATE WORKSHOP 🔧</div>
+                    <div class="story-text">
+                        You've made it to the final room - YOUR dream workshop!
+                        <br><br>
+                        Your cake is hidden in a custom-built furniture piece. Solve this DIY blueprint puzzle to find it!
+                    </div>
+                    <div class="puzzle-content">
+                        <div class="interactive-object">
+                            <strong>🔧 Blueprint Mystery:</strong><br><br>
+                            
+                            <p>You need to build a bookshelf. The blueprint shows:</p>
+                            <ul style="text-align: left; margin: 15px 0; line-height: 2;">
+                                <li>4 vertical boards (2m each)</li>
+                                <li>5 horizontal shelves (1m each)</li>
+                                <li>Each board costs €8 per meter</li>
+                            </ul>
+                            
+                            <strong>1. How many total meters of wood do you need?</strong><br>
+                            <input type="number" id="work1" placeholder="Enter meters..." style="width: 150px;"> meters<br><br>
+                            
+                            <strong>2. What's the total cost?</strong><br>
+                            <input type="number" id="work2" placeholder="Enter euros..." style="width: 150px;"> €<br><br>
+                            
+                            <strong>3. FINAL QUESTION: What tool is essential for birthday celebrations?</strong><br>
+                            <select id="work3" style="background: #000; color: #fff; padding: 10px; border: 2px solid #ff0000; font-size: 16px;">
+                                <option value="">Choose wisely...</option>
+                                <option value="hammer">Hammer</option>
+                                <option value="drill">Drill</option>
+                                <option value="knife">Cake Knife 🎂</option>
+                                <option value="saw">Saw</option>
+                            </select>
+                        </div>
+                        <div id="work-feedback"></div>
+                        <div class="hint-box">💡 Hint: 4×2 + 5×1 = ? meters total. And birthdays need something to cut cake! 🎂</div>
+                    </div>
+                    <button onclick="checkWorkshopPuzzle()">OPEN THE FURNITURE 🔧</button>
+                </div>
+            `);
+        }
+
+        function checkWorkshopPuzzle() {
+            const answer1 = document.getElementById('work1').value;
+            const answer2 = document.getElementById('work2').value;
+            const answer3 = document.getElementById('work3').value;
+            
+            const feedback = document.getElementById('work-feedback');
+            
+            if (answer1 === '13' && answer2 === '104' && answer3 === 'knife') {
+                feedback.innerHTML = '<div style="color: #00ff00; font-size: 24px; margin: 20px 0;">🎂 YOU FOUND THE CAKE! 🎂<br>HAPPY BIRTHDAY ANNA! 🎉</div>';
+                setTimeout(() => completeRoom(), 2000);
+            } else {
+                feedback.innerHTML = '<div class="wrong-answer">❌ The furniture won\'t open! Check your measurements! Try again!</div>';
+            }
+        }
+
+        // Reset game function
+        function resetGame() {
+            gameState.currentRoom = 0;
+            gameState.roomsCompleted = 0;
+            gameState.rooms.forEach(room => room.completed = false);
+            document.querySelectorAll('.progress-dot').forEach(dot => dot.classList.remove('completed'));
+            document.getElementById('victory-screen').classList.remove('active');
+            loadRoom(0);
+        }
+    </script>
+</body>
+</html>
